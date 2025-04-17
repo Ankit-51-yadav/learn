@@ -1,0 +1,172 @@
+import React, { useState, useEffect } from "react";
+import "./App.css";
+
+function App() {
+  const [salesOrders, setSalesOrders] = useState(() => {
+    const savedOrders = localStorage.getItem("salesOrders");
+    return savedOrders ? JSON.parse(savedOrders) : [];
+  });
+  const [grandTotal, setGrandTotal] = useState(() => {
+    const savedTotal = localStorage.getItem("grandTotal");
+    return savedTotal ? parseFloat(savedTotal) : 0;
+  });
+  const [formData, setFormData] = useState({
+    productName: "",
+    quantity: "",
+    price: "",
+  });
+  const [editIndex, setEditIndex] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem("salesOrders", JSON.stringify(salesOrders));
+    localStorage.setItem("grandTotal", grandTotal.toString());
+  }, [salesOrders, grandTotal]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const { productName, quantity, price } = formData;
+
+    if (productName && quantity > 0 && price > 0) {
+      const total = quantity * price;
+
+      if (editIndex !== null) {
+        // Edit existing order
+        const updatedOrders = [...salesOrders];
+        const oldTotal = updatedOrders[editIndex].total;
+        updatedOrders[editIndex] = { productName, quantity: parseInt(quantity), price: parseFloat(price), total };
+        setSalesOrders(updatedOrders);
+        setGrandTotal(grandTotal - oldTotal + total);
+        setEditIndex(null);
+      } else {
+        // Add new order
+        const newOrder = { productName, quantity: parseInt(quantity), price: parseFloat(price), total };
+        setSalesOrders([...salesOrders, newOrder]);
+        setGrandTotal(grandTotal + total);
+      }
+
+      // Reset form
+      setFormData({ productName: "", quantity: "", price: "" });
+    } else {
+      alert("Please fill out all fields with valid values.");
+    }
+  };
+
+  const handleRemove = (index) => {
+    const orderToRemove = salesOrders[index];
+    setGrandTotal(grandTotal - orderToRemove.total);
+
+    const updatedOrders = salesOrders.filter((_, i) => i !== index);
+    setSalesOrders(updatedOrders);
+  };
+
+  const handleEdit = (index) => {
+    const orderToEdit = salesOrders[index];
+    setFormData({
+      productName: orderToEdit.productName,
+      quantity: orderToEdit.quantity,
+      price: orderToEdit.price,
+    });
+    setEditIndex(index);
+  };
+
+  const handleClearAll = () => {
+    setSalesOrders([]);
+    setGrandTotal(0);
+    localStorage.removeItem("salesOrders");
+    localStorage.removeItem("grandTotal");
+  };
+
+  return (
+    <div className="App">
+      <h1>Purchase to Sales Order</h1>
+
+      <div className="form-container">
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="productName">Product Name</label>
+          <input
+            type="text"
+            id="productName"
+            name="productName"
+            value={formData.productName}
+            onChange={handleInputChange}
+            placeholder="Enter product name"
+            required
+          />
+
+          <label htmlFor="quantity">Quantity</label>
+          <input
+            type="number"
+            id="quantity"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleInputChange}
+            placeholder="Enter quantity"
+            required
+          />
+
+          <label htmlFor="price">Price (₹)</label>
+          <input
+            type="number"
+            id="price"
+            name="price"
+            value={formData.price}
+            onChange={handleInputChange}
+            placeholder="Enter price per unit"
+            required
+          />
+
+          <button type="submit">{editIndex !== null ? "Update Order" : "Add to Sales Order"}</button>
+        </form>
+      </div>
+
+      <div className="sales-orders">
+        <table>
+          <thead>
+            <tr>
+              <th>Product Name</th>
+              <th>Quantity</th>
+              <th>Price (₹)</th>
+              <th>Total (₹)</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {salesOrders.map((order, index) => (
+              <tr key={index}>
+                <td>{order.productName}</td>
+                <td>{order.quantity}</td>
+                <td>₹{order.price.toFixed(2)}</td>
+                <td>₹{order.total.toFixed(2)}</td>
+                <td>
+                  <button className="edit-btn" onClick={() => handleEdit(index)}>
+                    Edit
+                  </button>
+                  <button className="remove-btn" onClick={() => handleRemove(index)}>
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="grand-total">
+        Grand Total: ₹{grandTotal.toFixed(2)}
+      </div>
+
+      <button className="clear-btn" onClick={handleClearAll}>
+        Clear All Orders
+      </button>
+
+      <footer>© 2025 Purchase to Sales Order System</footer>
+    </div>
+  );
+}
+
+export default App;

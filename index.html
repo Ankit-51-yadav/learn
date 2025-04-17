@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase to Sales Order</title>
+    <style>
+        /* Existing CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-container input, .form-container select, .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-container button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .sales-orders {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .remove-btn {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            background-color: #cc0000;
+        }
+
+        .grand-total {
+            text-align: right;
+            margin: 20px auto;
+            max-width: 800px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Purchase to Sales Order</h1>
+
+    <div class="form-container">
+        <form id="purchaseForm">
+            <label for="productName">Product Name</label>
+            <input type="text" id="productName" name="productName" placeholder="Enter product name" required>
+
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" required>
+
+            <label for="price">Price (₹)</label>
+            <input type="number" id="price" name="price" placeholder="Enter price per unit" required>
+
+            <button type="submit">Add to Sales Order</button>
+        </form>
+    </div>
+
+    <div class="sales-orders">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Price (₹)</th>
+                    <th>Total (₹)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="salesOrderTable">
+                <!-- Sales orders will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="grand-total" id="grandTotal">
+        Grand Total: ₹0.00
+    </div>
+
+    <footer>
+        © 2025 Purchase to Sales Order System
+    </footer>
+
+    <script>
+        const purchaseForm = document.getElementById('purchaseForm');
+        const salesOrderTable = document.getElementById('salesOrderTable');
+        const grandTotalElement = document.getElementById('grandTotal');
+        let grandTotal = 0;
+
+        // JSON object to store sales orders
+        const salesOrders = [];
+
+        purchaseForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const productName = document.getElementById('productName').value;
+            const quantity = parseInt(document.getElementById('quantity').value, 10);
+            const price = parseFloat(document.getElementById('price').value);
+
+            if (productName && quantity > 0 && price > 0) {
+                const total = quantity * price;
+                grandTotal += total;
+
+                // Add the new order to the JSON object
+                const order = { productName, quantity, price, total };
+                salesOrders.push(order);
+
+                // Update the table
+                addOrderToTable(order);
+
+                // Update the grand total
+                updateGrandTotal();
+
+                // Reset the form
+                purchaseForm.reset();
+            } else {
+                alert('Please fill out all fields with valid values.');
+            }
+        });
+
+        function addOrderToTable(order) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${order.productName}</td>
+                <td>${order.quantity}</td>
+                <td>₹${order.price.toFixed(2)}</td>
+                <td>₹${order.total.toFixed(2)}</td>
+                <td><button class="remove-btn">Remove</button></td>
+            `;
+
+            // Add event listener to the remove button
+            row.querySelector('.remove-btn').addEventListener('click', function() {
+                grandTotal -= order.total;
+                salesOrders.splice(salesOrders.indexOf(order), 1); // Remove from JSON
+                row.remove();
+                updateGrandTotal();
+            });
+
+            salesOrderTable.appendChild(row);
+        }
+
+        function updateGrandTotal() {
+            grandTotalElement.textContent = `Grand Total: ₹${grandTotal.toFixed(2)}`;
+        }
+    </script>
+</body>
+</html>
